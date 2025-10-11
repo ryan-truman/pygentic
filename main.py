@@ -6,6 +6,7 @@ from google.genai import types
 
 load_dotenv()
 api_key = os.environ.get("GEMINI_API_KEY")
+github_pat = is.environ.get("GITHUB_PAT_TOKEN")
 
 client = genai.Client(api_key=api_key)
 
