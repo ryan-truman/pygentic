@@ -48,17 +48,16 @@ def call_function(function_call, verbose=False):
     dispatch = {
     "get_files_info": get_files_info,
     "get_file_content": get_file_content,
-    "write_file_content": write_file_content,
-    "run_python": run_python,
+    "write_file": write_file,
+    "run_python_file": run_python_file,
     }
-    dispatch.get(function_call.name)("./calculator", function_call.args)
+    kwargs = function_call.args
+    kwargs["working_directory"] = "./calculator"
+    dispatch.get(function_call.name)(**kwargs)
 
 
-print(response.function_calls)
 for function_call in response.function_calls:
-    print(function_call)
     call_function(function_call)
-    print(f"Calling function: {function_call.name}({function_call.args})")
 
 if "--verbose" in sys.argv:
     print(f"{response.text}\nUser prompt: {sys.argv[1]}\nPrompt tokens: {response.usage_metadata.prompt_token_count}\nResponse tokens: {response.usage_metadata.candidates_token_count}")
