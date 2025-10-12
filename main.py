@@ -1,6 +1,10 @@
 import os
 import sys
 import config
+from functions.get_files_info import get_files_info
+from functions.get_file_content import get_file_content
+from functions.write_file import write_file
+from functions.run_python_file import run_python_file
 from functions.get_files_info import schema_get_files_info
 from functions.get_file_content import schema_get_file_content
 from functions.write_file import schema_write_file
@@ -40,14 +44,21 @@ response = client.models.generate_content(
     )
 )
 
-def call_function(function_call_part, verbose=False):
-    if verbose in sys.argv:
-        return(f"Calling function: {function_call.name}({function_call.args})")
-    else:
-        return(f"Calling function: {function_call.name}")
+def call_function(function_call, verbose=False):
+    dispatch = {
+    "get_files_info": get_files_info,
+    "get_file_content": get_file_content,
+    "write_file_content": write_file_content,
+    "run_python": run_python,
+    }
+    dispatch.get(function_call.name)("./calculator", function_call.args)
 
+
+print(response.function_calls)
 for function_call in response.function_calls:
-    call_function(function_call.name, **function_call.args)
+    print(function_call)
+    call_function(function_call)
+    print(f"Calling function: {function_call.name}({function_call.args})")
 
 if "--verbose" in sys.argv:
     print(f"{response.text}\nUser prompt: {sys.argv[1]}\nPrompt tokens: {response.usage_metadata.prompt_token_count}\nResponse tokens: {response.usage_metadata.candidates_token_count}")
