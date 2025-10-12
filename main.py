@@ -40,8 +40,14 @@ response = client.models.generate_content(
     )
 )
 
+def call_function(function_call_part, verbose=False):
+    if verbose in sys.argv:
+        return(f"Calling function: {function_call.name}({function_call.args})")
+    else:
+        return(f"Calling function: {function_call.name}")
+
 for function_call in response.function_calls:
-    print(f"Calling function: {function_call.name}({function_call.args})")
+    call_function(function_call.name, **function_call.args)
 
 if "--verbose" in sys.argv:
     print(f"{response.text}\nUser prompt: {sys.argv[1]}\nPrompt tokens: {response.usage_metadata.prompt_token_count}\nResponse tokens: {response.usage_metadata.candidates_token_count}")
