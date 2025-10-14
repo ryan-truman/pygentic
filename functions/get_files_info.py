@@ -30,4 +30,3 @@ def get_files_info(working_directory, directory="."):
             return "\n".join(output)
         except exception as e:
             return f"Error:{e}"
-print(get_files_info("calculator", "."))

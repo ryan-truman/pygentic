@@ -45,6 +45,10 @@ response = client.models.generate_content(
 )
 
 def call_function(function_call, verbose=False):
+    if verbose == True:
+        print(f"Calling function: {function_call.name}({function_call.args})")
+    else:
+        print(f" - Calling function: {function_call.name}")
     dispatch = {
     "get_files_info": get_files_info,
     "get_file_content": get_file_content,
@@ -53,13 +57,37 @@ def call_function(function_call, verbose=False):
     }
     kwargs = function_call.args
     kwargs["working_directory"] = "./calculator"
-    dispatch.get(function_call.name)(**kwargs)
-
-
-for function_call in response.function_calls:
-    call_function(function_call)
+    if function_call.name not in dispatch:
+        return types.Content(
+            role="tool",
+            parts=[
+                types.Part.from_function_response(
+                    name=function_call.name,
+                    response={"error": f"Unknown function: {function_call.name}"},
+                )
+            ],
+        )
+    return types.Content(
+        role="tool",
+        parts=[
+            types.Part.from_function_response(
+                name=function_call.name,
+                response={"result": dispatch.get(function_call.name)(**kwargs)},
+            )
+        ],
+    )
 
 if "--verbose" in sys.argv:
-    print(f"{response.text}\nUser prompt: {sys.argv[1]}\nPrompt tokens: {response.usage_metadata.prompt_token_count}\nResponse tokens: {response.usage_metadata.candidates_token_count}")
+    for function_call in response.function_calls:
+        try:
+            print(f"-> {call_function(function_call,verbose=True).parts[0].function_response.response}")
+        except Exception as e:
+            print(f"Error: {e}")
+    # print(f"{response.text}\nUser prompt: {sys.argv[1]}\nPrompt tokens: {response.usage_metadata.prompt_token_count}\nResponse tokens: {response.usage_metadata.candidates_token_count}")
 else:
-    print(response.text)
+    for function_call in response.function_calls:
+        try:
+            print(call_function(function_call).parts[0].function_response.response)
+        except Exception as e:
+            print(f"Error: {e}")
+    # print(response.text)

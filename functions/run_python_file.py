@@ -15,7 +15,8 @@ schema_run_python_file = types.FunctionDeclaration(
                 description="The filepath to the file to run, relative to the working directory. If not provided, lists files in the working directory itself.",
             ),
             "args": types.Schema(
-                type=types.Type.STRING,
+                type=types.Type.ARRAY,
+                items=types.Schema(type=types.Type.STRING),
                 description="list of arguments to be provided to the python file",
             ),
         },
@@ -40,8 +41,8 @@ def run_python_file(working_directory, file_path, args=[]):
                 text=True,
             )
             if completed_process.returncode != 0:
-                return f"Process exited with code {completed_process.returncode}"
-            if completed_process.stdout == "":
+                return f"STDOUT:{completed_process.stdout}\nSTDERR:{completed_process.stderr}\nProcess exited with code {completed_process.returncode}"
+            if completed_process.stdout == "" and completed_process.stderr == "":
                 return f"No output produced."
             return f"STDOUT:{completed_process.stdout}\nSTDERR:{completed_process.stderr}"
         except Exception as e:
