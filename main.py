@@ -35,15 +35,6 @@ available_functions = types.Tool(
     ]
 )
 
-response = client.models.generate_content(
-    model='gemini-2.0-flash-001',
-    contents=messages,
-    config=types.GenerateContentConfig(
-        tools=[available_functions],
-        system_instruction=system_prompt
-    )
-)
-
 def call_function(function_call, verbose=False):
     if verbose == True:
         print(f"Calling function: {function_call.name}({function_call.args})")
@@ -77,17 +68,61 @@ def call_function(function_call, verbose=False):
         ],
     )
 
-if "--verbose" in sys.argv:
-    for function_call in response.function_calls:
-        try:
-            print(f"-> {call_function(function_call,verbose=True).parts[0].function_response.response}")
-        except Exception as e:
-            print(f"Error: {e}")
-    # print(f"{response.text}\nUser prompt: {sys.argv[1]}\nPrompt tokens: {response.usage_metadata.prompt_token_count}\nResponse tokens: {response.usage_metadata.candidates_token_count}")
-else:
-    for function_call in response.function_calls:
-        try:
-            print(call_function(function_call).parts[0].function_response.response)
-        except Exception as e:
-            print(f"Error: {e}")
-    # print(response.text)
+# response = client.models.generate_content(
+#     model='gemini-2.0-flash-001',
+#     contents=messages,
+#     config=types.GenerateContentConfig(
+#         tools=[available_functions],
+#         system_instruction=system_prompt
+#     )
+# )
+
+i=0
+
+while i <= 20:
+    i += 1
+    response = client.models.generate_content(
+        model='gemini-2.0-flash-001',
+        contents=messages,
+        config=types.GenerateContentConfig(
+            tools=[available_functions],
+            system_instruction=system_prompt
+        )
+    )
+    for candidate in response.candidates:
+        messages.append(candidate.content)
+    if "--verbose" in sys.argv:
+        if response.function_calls:
+            for function_call in response.function_calls:
+                try:
+                    output = call_function(function_call,verbose=True).parts[0].function_response.response
+                    messages.append(
+                        types.Content(
+                            role="user",
+                            parts=[types.Part.from_function_response(
+                                name=function_call.name,
+                                response=output
+                            )]
+                        )
+                    )
+                except Exception as e:
+                    print(f"Error: {e}")
+    else:
+        if response.function_calls:
+            for function_call in response.function_calls:
+                try:
+                    output = call_function(function_call).parts[0].function_response.response
+                    messages.append(
+                        types.Content(
+                            role="user",
+                            parts=[types.Part.from_function_response(
+                                name=function_call.name,
+                                response=output
+                            )]
+                        )
+                    )
+                except Exception as e:
+                    print(f"Error: {e}")
+    if not response.function_calls and response.text:
+        print("Final response:\n" + response.text)
+        break
