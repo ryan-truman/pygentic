@@ -68,14 +68,6 @@ def call_function(function_call, verbose=False):
         ],
     )
 
-# response = client.models.generate_content(
-#     model='gemini-2.0-flash-001',
-#     contents=messages,
-#     config=types.GenerateContentConfig(
-#         tools=[available_functions],
-#         system_instruction=system_prompt
-#     )
-# )
 
 i=0
 
